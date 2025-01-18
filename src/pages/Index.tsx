@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 import FileUpload from "@/components/FileUpload";
 import { generatePDF, InvoiceData } from "@/utils/pdfGenerator";
 import Papa from "papaparse";
-import { Button } from "@/components/ui/button";
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 const Index = () => {
   const [csvFile, setCsvFile] = useState<File | null>(null);
@@ -36,6 +38,7 @@ const Index = () => {
                   }
                 ],
                 subtotal: parseFloat(row["Total Amount"].replace("$", "").replace(",", "")),
+                totalAmount: parseFloat(row["Total Amount"].replace("$", "").replace(",", "")),
                 taxRate: 10
               }));
 
@@ -69,22 +72,40 @@ const Index = () => {
       return;
     }
 
-    try {
-      invoiceData.forEach((data, index) => {
+    if (invoiceData.length === 1) {
+      try {
+        invoiceData.forEach((data) => {
+          const doc = generatePDF(data);
+          const filename = `${data.billToName} - ${data.invoiceDate.replace(/\//g, '-')}.pdf`;
+          doc.save(filename);
+        });
+
+        toast({
+          title: "PDF generated successfully",
+          description: `Generated ${invoiceData.length} invoice.`,
+        });
+      } catch (error) {
+        console.error("Error generating PDFs:", error);
+        toast({
+          variant: "destructive",
+          title: "Error generating PDF",
+          description: "An error occurred while generating the PDF.",
+        });
+      }
+    } else {
+      const zip = new JSZip();
+      invoiceData.forEach((data) => {
         const doc = generatePDF(data);
-        doc.save(`invoice-${data.invoiceNo}.pdf`);
+        const filename = `${data.billToName} - ${data.invoiceDate.replace(/\//g, '-')}.pdf`;
+        zip.file(filename, doc.output('blob'));
       });
-      
-      toast({
-        title: "PDFs generated successfully",
-        description: `Generated ${invoiceData.length} invoice(s).`,
-      });
-    } catch (error) {
-      console.error("Error generating PDFs:", error);
-      toast({
-        variant: "destructive",
-        title: "Error generating PDFs",
-        description: "An error occurred while generating the PDFs.",
+
+      zip.generateAsync({ type: 'blob' }).then(function (content) {
+        saveAs(content, 'invoices.zip');
+        toast({
+          title: "ZIP file generated successfully",
+          description: `Generated and downloaded ${invoiceData.length} invoices in a zip file.`,
+        });
       });
     }
   };
@@ -93,7 +114,7 @@ const Index = () => {
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="container max-w-5xl mx-auto px-4">
         <h1 className="text-4xl font-bold text-gray-900 mb-8">Invoice Generator</h1>
-        
+
         <div className="space-y-8">
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-xl font-semibold mb-4">1. Upload CSV</h2>

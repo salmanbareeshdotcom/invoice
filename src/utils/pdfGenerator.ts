@@ -17,6 +17,7 @@ export interface InvoiceData {
   }>;
   subtotal: number;
   taxRate: number;
+  totalAmount: number;
 }
 
 export const generatePDF = (data: InvoiceData): jsPDF => {
@@ -59,8 +60,8 @@ export const generatePDF = (data: InvoiceData): jsPDF => {
   doc.setFillColor(240, 240, 240);
   doc.rect(15, startY, pageWidth - 30, 10, 'F');
   doc.setFont('helvetica', 'bold');
-  doc.text('Item', 20, startY + 7);
-  doc.text('Description', 70, startY + 7);
+  doc.text('#', 20, startY + 7);
+  doc.text('Description', 50, startY + 7);
   doc.text('Rate', 130, startY + 7);
   doc.text('Qty', 150, startY + 7);
   doc.text('Amount', 170, startY + 7);
@@ -72,40 +73,18 @@ export const generatePDF = (data: InvoiceData): jsPDF => {
   data.items.forEach(item => {
     if (item.name) {
       doc.text(item.name.toString(), 20, currentY);
-      doc.text(item.description || '', 70, currentY);
+      doc.text(item.description || '', 50, currentY);
       doc.text(`$${item.rate.toFixed(2)}`, 130, currentY);
       doc.text(item.quantity.toString(), 150, currentY);
       doc.text(`$${item.amount.toFixed(2)}`, 170, currentY);
       currentY += 10;
     }
   });
-  
-  // Totals
-  currentY += 10;
-  const totalsX = 140;
+
+  // Total amount
+  doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text('Subtotal:', totalsX, currentY);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`$${data.subtotal.toFixed(2)}`, 170, currentY);
-  
-  currentY += 8;
-  doc.setFont('helvetica', 'bold');
-  doc.text('Tax Rate:', totalsX, currentY);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`${data.taxRate}%`, 170, currentY);
-  
-  currentY += 8;
-  const tax = data.subtotal * (data.taxRate / 100);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Tax:', totalsX, currentY);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`$${tax.toFixed(2)}`, 170, currentY);
-  
-  currentY += 10;
-  doc.setFont('helvetica', 'bold');
-  doc.text('Total:', totalsX, currentY);
-  doc.setFont('helvetica', 'bold');
-  doc.text(`$${(data.subtotal + tax).toFixed(2)}`, 170, currentY);
+  doc.text(`Total: $${data.totalAmount.toFixed(2)}`, pageWidth - 50, currentY + 20, { align: 'left' });
   
   // Footer
   doc.setFont('helvetica', 'normal');
