@@ -74,9 +74,9 @@ export const generatePDF = (data: InvoiceData): jsPDF => {
     if (item.name) {
       doc.text(item.name.toString(), 20, currentY);
       doc.text(item.description || '', 50, currentY);
-      doc.text(`₹${item.rate.toFixed(2)}`, 130, currentY);  // Changed from $ to ₹
+      doc.text(`Rs${item.rate.toFixed(2)}`, 130, currentY);  // Changed from $ to ₹
       doc.text(item.quantity.toString(), 150, currentY);
-      doc.text(`₹${item.amount.toFixed(2)}`, 170, currentY);  // Changed from $ to ₹
+      doc.text(`Rs${item.amount.toFixed(2)}`, 170, currentY);  // Changed from $ to ₹
       currentY += 10;
     }
   });
@@ -84,7 +84,7 @@ export const generatePDF = (data: InvoiceData): jsPDF => {
   // Total amount
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text(`Total: ₹${data.totalAmount.toFixed(2)}`, pageWidth - 50, currentY + 20, { align: 'left' });  // Changed from $ to ₹
+  doc.text(`Total: Rs${data.totalAmount.toFixed(2)}`, pageWidth - 50, currentY + 20, { align: 'left' });  // Changed from $ to ₹
   
   // Footer
   doc.setFont('helvetica', 'normal');
